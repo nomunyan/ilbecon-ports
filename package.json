@@ -1,6 +1,6 @@
 {
   "name": "ilbecon-ports",
-  "productName": "일베콘 포트",
+  "productName": "ilbecon-ports",
   "version": "1.0.0",
   "description": "타 사이트 콘을 일베콘 형식으로 변환",
   "main": ".webpack/main",
@@ -19,7 +19,9 @@
   "license": "MIT",
   "config": {
     "forge": {
-      "packagerConfig": {},
+      "packagerConfig": {
+        "icon": "resources/icon"
+      },
       "makers": [
         {
           "name": "@electron-forge/maker-squirrel",

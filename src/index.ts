@@ -17,6 +17,7 @@ const createWindow = (): void => {
     resizable: false,
     show: false,
     useContentSize: true,
+    autoHideMenuBar: true,
   });
   mainWindow.once("ready-to-show", () => {
     mainWindow.show();
