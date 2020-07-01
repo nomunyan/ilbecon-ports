@@ -1,6 +1,7 @@
 import SuyongsoProvider from "./SuyongsoProvider";
+import IlbeProvider from "./IlbeProvider";
 
-const providers = [SuyongsoProvider];
+const providers = [IlbeProvider, SuyongsoProvider];
 
 export default interface Provider {
   readonly re: RegExp;
