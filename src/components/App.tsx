@@ -2,11 +2,14 @@ import React, { useState } from "react";
 import Provider, { getProvider, ProviderResult } from "../Provider";
 import FirstPage from "./FirstPage";
 import UploadingPage from "./UploadingPage";
+import { UploadResult } from "../";
+import SuccessPage from "./SuccessPage";
 
 export default function App(): JSX.Element {
   const [page, setPage] = useState<number>(0);
   const [provider, setProvider] = useState<Provider>(undefined);
   const [url, setUrl] = useState<string>();
+  const [result, setResult] = useState<ProviderResult>(undefined);
 
   const change = (
     _event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -19,13 +22,24 @@ export default function App(): JSX.Element {
       setProvider(provider);
     }
   };
-  const uploadCancel = (): void => {
+  const cancel = (): void => {
     setPage(0);
     setProvider(undefined);
+    setResult(undefined);
   };
-  const uploadSuccess = (result: ProviderResult): void => {
-    console.log(result);
+  const uploadSuccess = (
+    result: ProviderResult,
+    errors: UploadResult[]
+  ): void => {
+    setResult(result);
     setPage(2);
+    if (errors.length > 0) {
+      alert(
+        `다음파일은 업로드되지 않았습니다.\n${errors
+          .map((e) => `${e.fileName}: ${e.error.message}`)
+          .join("\n")}`
+      );
+    }
   };
 
   switch (page) {
@@ -34,7 +48,10 @@ export default function App(): JSX.Element {
         <FirstPage
           provider={provider}
           onChange={change}
-          onNext={(): void => setPage(1)}
+          onNext={(): void => {
+            alert("저작권 조심해라 게이야~");
+            setPage(1);
+          }}
         />
       );
     case 1:
@@ -42,11 +59,11 @@ export default function App(): JSX.Element {
         <UploadingPage
           provider={provider}
           url={url}
-          onCancel={uploadCancel}
+          onCancel={cancel}
           onSuccess={uploadSuccess}
         />
       );
     case 2:
-      return <div>success</div>;
+      return <SuccessPage {...result} onBack={cancel} />;
   }
 }

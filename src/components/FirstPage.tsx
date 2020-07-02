@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Stack,
   TextField,
@@ -11,6 +11,7 @@ import {
 } from "@fluentui/react";
 import { Text } from "office-ui-fabric-react/lib/Text";
 import Provider from "../Provider";
+import { ipcRenderer } from "electron";
 
 const columnProps: Partial<IStackProps> = {
   tokens: { childrenGap: 15 },
@@ -29,6 +30,9 @@ interface FirstPageProps {
   onNext(): void;
 }
 export default function FirstPage(props: FirstPageProps): JSX.Element {
+  useEffect(() => {
+    ipcRenderer.send("resize", 150);
+  }, []);
   return (
     <Stack {...columnProps}>
       <Stack horizontal {...columnProps} verticalAlign="center">

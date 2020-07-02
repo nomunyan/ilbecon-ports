@@ -7,6 +7,7 @@ import {
 } from "@fluentui/react";
 import Provider, { ProviderResult, ImgData } from "../Provider";
 import { ipcRenderer } from "electron";
+import { UploadResult } from "../";
 
 const columnProps: Partial<IStackProps> = {
   tokens: { childrenGap: 15 },
@@ -16,35 +17,41 @@ const columnProps: Partial<IStackProps> = {
 interface UploadingPageProps {
   url: string;
   onCancel(): void;
-  onSuccess(result: ProviderResult): void;
+  onSuccess(result: ProviderResult, errors: UploadResult[]): void;
   provider: Provider;
 }
 export default function UploadingPage(props: UploadingPageProps): JSX.Element {
   const [pos, setPos] = useState<number>(-1);
   const [data, setData] = useState<ProviderResult>();
-  let canceled = false;
+
+  useEffect(() => {
+    ipcRenderer.send("resize", 130);
+  }, []);
 
   useEffect(() => {
     async function uploadData(uploadData: ProviderResult): Promise<void> {
-      if (canceled) return;
       const imgList: ImgData[] = [];
-      let position = 35;
-      ipcRenderer.on("upload-from-url-reply", (_event, res: ImgData) => {
-        console.log(res);
-        if (res) {
+      const errors: UploadResult[] = [];
+      let position = 0;
+      ipcRenderer.on("upload-from-url-reply", (_event, res: UploadResult) => {
+        if (!res.error) {
           imgList.push({
-            filename: res.filename,
+            filename: res.fileName,
             url: `https://www.ilbe.com${res.url}`,
           });
+        } else {
+          res.fileName = uploadData.images[position].filename;
+          errors.push(res);
         }
         if (++position < uploadData.images.length) setPos(position);
         else {
-          console.log(position);
-          props.onSuccess({ ...uploadData, images: imgList });
+          position = 0;
+          props.onSuccess({ ...uploadData, images: imgList }, errors);
           return;
         }
         ipcRenderer.send("upload-from-url", uploadData.images[position]);
       });
+      setPos(position);
       ipcRenderer.send("upload-from-url", uploadData.images[position]);
     }
 
@@ -59,8 +66,12 @@ export default function UploadingPage(props: UploadingPageProps): JSX.Element {
   return (
     <Stack {...columnProps}>
       <ProgressIndicator
-        label={`진행도 ${data ? (pos / (data.images.length - 1)) * 100 : 0}%`}
-        percentComplete={data ? pos / (data.images.length - 1) : 0}
+        label={`진행도 ${
+          data && pos !== -1 ? ((pos + 1) / data.images.length) * 100 : 0
+        }%`}
+        percentComplete={
+          data && pos !== -1 ? (pos + 1) / data.images.length : 0
+        }
         description={`처리: ${
           data?.images[pos]?.filename || data?.images[pos]?.url || "준비중..."
         }`}
@@ -68,8 +79,8 @@ export default function UploadingPage(props: UploadingPageProps): JSX.Element {
       <PrimaryButton
         text="중지"
         onClick={(): void => {
-          canceled = true;
-          props.onCancel;
+          ipcRenderer.removeAllListeners("upload-from-url-reply");
+          props.onCancel();
         }}
       />
     </Stack>

@@ -1,6 +1,5 @@
 import { app, BrowserWindow, Menu, ipcMain } from "electron";
 import axios from "axios";
-import fs from "fs";
 import FormData from "form-data";
 import { ImgData } from "./Provider";
 
@@ -24,6 +23,13 @@ const createWindow = (): void => {
     autoHideMenuBar: true,
     webPreferences: { nodeIntegration: true },
   });
+
+  ipcMain.on("resize", (_event, height) => {
+    mainWindow.setContentSize(600, height, true);
+    mainWindow.setMaximizable(false);
+    mainWindow.setResizable(false);
+  });
+
   mainWindow.once("ready-to-show", () => {
     mainWindow.show();
   });
@@ -121,7 +127,8 @@ const createWindow = (): void => {
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  process.env.NODE_ENV === "development" &&
+    mainWindow.webContents.openDevTools();
 };
 
 // This method will be called when Electron has finished
@@ -151,6 +158,13 @@ ipcMain.on("fetch", async (event, url: string) => {
   event.returnValue = data;
 });
 
+export interface UploadResult {
+  uploaded: number;
+  error?: { message: string };
+  url?: string;
+  fileName?: string;
+}
+
 ipcMain.on("upload-from-url", async (event, imgData: ImgData) => {
   try {
     const formData = new FormData();
@@ -165,7 +179,7 @@ ipcMain.on("upload-from-url", async (event, imgData: ImgData) => {
       filename: content.match(/filename="(.*)"/i)[1] || imgData.filename,
     });
     formData.append("ckCsrfToken", "nomunyan");
-    const { data } = await axios.post(
+    const { data } = await axios.post<UploadResult>(
       "https://www.ilbe.com/file/imageupload?d=518&m=523&responseType=json",
       formData,
       {
@@ -175,15 +189,11 @@ ipcMain.on("upload-from-url", async (event, imgData: ImgData) => {
         },
       }
     );
-
-    if (data.uploaded === 0) event.reply("upload-from-url-reply", null);
-    else
-      event.reply("upload-from-url-reply", {
-        filename: data.fileName,
-        url: data.url,
-      });
+    event.reply("upload-from-url-reply", data);
   } catch (e) {
-    console.log(e.message);
-    event.reply("upload-from-url-reply", null);
+    event.reply("upload-from-url-reply", {
+      uploaded: 0,
+      error: { message: e.message },
+    } as UploadResult);
   }
 });
