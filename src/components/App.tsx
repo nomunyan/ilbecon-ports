@@ -4,6 +4,7 @@ import FirstPage from "./FirstPage";
 import UploadingPage from "./UploadingPage";
 import { UploadResult } from "../";
 import SuccessPage from "./SuccessPage";
+import LocalProvider from "../Provider/LocalProvider";
 
 export default function App(): JSX.Element {
   const [page, setPage] = useState<number>(0);
@@ -11,14 +12,11 @@ export default function App(): JSX.Element {
   const [url, setUrl] = useState<string>();
   const [result, setResult] = useState<ProviderResult>(undefined);
 
-  const change = (
-    _event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>,
-    newValue?: string
-  ): void => {
-    const provider = getProvider(newValue);
+  const change = (value?: string): void => {
+    const provider = getProvider(value);
     setProvider(undefined);
     if (provider) {
-      setUrl(newValue);
+      setUrl(value);
       setProvider(provider);
     }
   };
@@ -41,6 +39,15 @@ export default function App(): JSX.Element {
       );
     }
   };
+  const uploadStart = (): void => {
+    alert("저작권 조심해라 게이야~");
+    setPage(1);
+  };
+  const onSelectDir = (path: string): void => {
+    setUrl(path);
+    setProvider(LocalProvider);
+    uploadStart();
+  };
 
   switch (page) {
     case 0:
@@ -48,10 +55,8 @@ export default function App(): JSX.Element {
         <FirstPage
           provider={provider}
           onChange={change}
-          onNext={(): void => {
-            alert("저작권 조심해라 게이야~");
-            setPage(1);
-          }}
+          onSelDir={onSelectDir}
+          onNext={uploadStart}
         />
       );
     case 1:

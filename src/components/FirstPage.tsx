@@ -11,7 +11,7 @@ import {
 } from "@fluentui/react";
 import { Text } from "office-ui-fabric-react/lib/Text";
 import Provider from "../Provider";
-import { ipcRenderer } from "electron";
+import { ipcRenderer, remote } from "electron";
 
 const columnProps: Partial<IStackProps> = {
   tokens: { childrenGap: 15 },
@@ -23,16 +23,22 @@ const verticalStyle = mergeStyles({
 
 interface FirstPageProps {
   provider: Provider;
-  onChange(
-    event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>,
-    newValue?: string
-  ): void;
+  onChange(value?: string): void;
+  onSelDir(vaue?: string): void;
   onNext(): void;
 }
 export default function FirstPage(props: FirstPageProps): JSX.Element {
+  const selDir = (): void => {
+    const paths = remote.dialog.showOpenDialogSync({
+      title: "폴더를 선택",
+      properties: ["openDirectory"],
+    });
+    props.onSelDir(paths[0]);
+  };
   useEffect(() => {
     ipcRenderer.send("resize", 150);
   }, []);
+
   return (
     <Stack {...columnProps}>
       <Stack horizontal {...columnProps} verticalAlign="center">
@@ -41,7 +47,7 @@ export default function FirstPage(props: FirstPageProps): JSX.Element {
             label="링크 입력"
             errorMessage={!props.provider && "올바르지 않은 링크입니다."}
             description={props.provider && props.provider.name}
-            onChange={props.onChange}
+            onChange={(_, value): void => props.onChange(value)}
           />
         </Stack.Item>
         <Stack.Item className={verticalStyle}>
@@ -50,7 +56,7 @@ export default function FirstPage(props: FirstPageProps): JSX.Element {
         <Stack.Item grow>
           <Stack tokens={{ childrenGap: 3 }}>
             <Label>로컬에서 가져오기</Label>
-            <DefaultButton text="폴더 선택" />
+            <DefaultButton text="폴더 선택" onClick={(): void => selDir()} />
             <Text variant="small">이미지가 들어있는 폴더에서 가져옴</Text>
           </Stack>
         </Stack.Item>

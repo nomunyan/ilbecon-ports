@@ -2,6 +2,7 @@ import { app, BrowserWindow, Menu, ipcMain } from "electron";
 import axios from "axios";
 import FormData from "form-data";
 import { ImgData } from "./Provider";
+import fs from "fs";
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 
@@ -165,19 +166,23 @@ export interface UploadResult {
   fileName?: string;
 }
 
-ipcMain.on("upload-from-url", async (event, imgData: ImgData) => {
+ipcMain.on("upload", async (event, imgData: ImgData) => {
   try {
     const formData = new FormData();
-    const { data: imgStream, headers } = await axios.get<NodeJS.ReadableStream>(
-      imgData.url,
-      {
+
+    if (imgData.url.match(/^https:\/\//gi)) {
+      const { data: imgStream, headers } = await axios.get<
+        NodeJS.ReadableStream
+      >(imgData.url, {
         responseType: "stream",
-      }
-    );
-    const content: string = headers["content-disposition"];
-    formData.append("upload", imgStream, {
-      filename: content.match(/filename="(.*)"/i)[1] || imgData.filename,
-    });
+      });
+      const content: string | undefined = headers["content-disposition"];
+      formData.append("upload", imgStream, {
+        filename: content?.match(/filename="(.*)"/i)[1] || imgData.filename,
+      });
+    } else {
+      formData.append("upload", fs.createReadStream(imgData.url));
+    }
     formData.append("ckCsrfToken", "nomunyan");
     const { data } = await axios.post<UploadResult>(
       "https://www.ilbe.com/file/imageupload?d=518&m=523&responseType=json",
@@ -189,11 +194,18 @@ ipcMain.on("upload-from-url", async (event, imgData: ImgData) => {
         },
       }
     );
-    event.reply("upload-from-url-reply", data);
+    event.reply("upload-reply", data);
   } catch (e) {
-    event.reply("upload-from-url-reply", {
+    event.reply("upload-reply", {
       uploaded: 0,
       error: { message: e.message },
     } as UploadResult);
   }
+});
+
+ipcMain.on("read-dir", (event, path: string) => {
+  const dirs = fs.readdirSync(path);
+  event.returnValue = dirs
+    .filter((dir) => dir.match(/.*\.(jpe?g|png|gif)$/gi))
+    .map((dir) => `${path}/${dir}`);
 });

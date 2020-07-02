@@ -2,7 +2,7 @@ import Provider, { ProviderResult } from "./index";
 import { ipcRenderer } from "electron";
 
 export default {
-  re: /https?:\/\/www\.ilbe\.com\/view\/(\d*)/i,
+  re: /^https?:\/\/www\.ilbe\.com\/view\/(\d*)/i,
   name: "일베글",
   async getData(link: string): Promise<ProviderResult> {
     const data = ipcRenderer.sendSync("fetch", link);

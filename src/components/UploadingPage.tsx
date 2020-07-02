@@ -33,7 +33,7 @@ export default function UploadingPage(props: UploadingPageProps): JSX.Element {
       const imgList: ImgData[] = [];
       const errors: UploadResult[] = [];
       let position = 0;
-      ipcRenderer.on("upload-from-url-reply", (_event, res: UploadResult) => {
+      ipcRenderer.on("upload-reply", (_event, res: UploadResult) => {
         if (!res.error) {
           imgList.push({
             filename: res.fileName,
@@ -49,10 +49,10 @@ export default function UploadingPage(props: UploadingPageProps): JSX.Element {
           props.onSuccess({ ...uploadData, images: imgList }, errors);
           return;
         }
-        ipcRenderer.send("upload-from-url", uploadData.images[position]);
+        ipcRenderer.send("upload", uploadData.images[position]);
       });
       setPos(position);
-      ipcRenderer.send("upload-from-url", uploadData.images[position]);
+      ipcRenderer.send("upload", uploadData.images[position]);
     }
 
     async function fetchData(): Promise<void> {
@@ -60,6 +60,7 @@ export default function UploadingPage(props: UploadingPageProps): JSX.Element {
       setData(fetchData);
       await uploadData(fetchData);
     }
+
     fetchData();
   }, []);
 
