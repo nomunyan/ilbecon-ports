@@ -6,11 +6,20 @@ const providers = [IlbeProvider, SuyongsoProvider];
 export default interface Provider {
   readonly re: RegExp;
   readonly name: string;
-  getData(link: string): ProviderResult[];
+  getData(link: string): Promise<ProviderResult>;
 }
 
 export interface ProviderResult {
-  readonly image: string;
+  readonly images: ImgData[];
+  readonly title: string;
+  readonly tags: string[];
+  readonly author: string;
+  readonly source: string;
+}
+
+export interface ImgData {
+  url: string;
+  filename: string;
 }
 
 export function getProvider(link: string): Provider {

@@ -90,6 +90,7 @@
   },
   "dependencies": {
     "@fluentui/react": "^7.121.6",
+    "@types/form-data": "^2.5.0",
     "@types/react": "^16.9.41",
     "@types/react-dom": "^16.9.8",
     "axios": "^0.19.2",

@@ -1,4 +1,8 @@
-import { app, BrowserWindow, Menu } from "electron";
+import { app, BrowserWindow, Menu, ipcMain } from "electron";
+import axios from "axios";
+import fs from "fs";
+import FormData from "form-data";
+import { ImgData } from "./Provider";
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 
@@ -18,6 +22,7 @@ const createWindow = (): void => {
     show: false,
     useContentSize: true,
     autoHideMenuBar: true,
+    webPreferences: { nodeIntegration: true },
   });
   mainWindow.once("ready-to-show", () => {
     mainWindow.show();
@@ -141,5 +146,44 @@ app.on("activate", () => {
   }
 });
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and import them here.
+ipcMain.on("fetch", async (event, url: string) => {
+  const { data } = await axios.get(url);
+  event.returnValue = data;
+});
+
+ipcMain.on("upload-from-url", async (event, imgData: ImgData) => {
+  try {
+    const formData = new FormData();
+    const { data: imgStream, headers } = await axios.get<NodeJS.ReadableStream>(
+      imgData.url,
+      {
+        responseType: "stream",
+      }
+    );
+    const content: string = headers["content-disposition"];
+    formData.append("upload", imgStream, {
+      filename: content.match(/filename="(.*)"/i)[1] || imgData.filename,
+    });
+    formData.append("ckCsrfToken", "nomunyan");
+    const { data } = await axios.post(
+      "https://www.ilbe.com/file/imageupload?d=518&m=523&responseType=json",
+      formData,
+      {
+        headers: {
+          Cookie: "ckCsrfToken=nomunyan;",
+          ...formData.getHeaders(),
+        },
+      }
+    );
+
+    if (data.uploaded === 0) event.reply("upload-from-url-reply", null);
+    else
+      event.reply("upload-from-url-reply", {
+        filename: data.fileName,
+        url: data.url,
+      });
+  } catch (e) {
+    console.log(e.message);
+    event.reply("upload-from-url-reply", null);
+  }
+});
