@@ -4,8 +4,8 @@ import { ipcRenderer } from "electron";
 export default {
   re: /^https?:\/\/suyong\.so\/index\.php\?mid=.*(?:&|$)sticker_srl=(.*)(?:&|$)/i,
   name: "수흥콘",
-  async getData(link): Promise<ProviderResult> {
-    const data = ipcRenderer.sendSync("fetch", link);
+  async getData(url): Promise<ProviderResult> {
+    const data = ipcRenderer.sendSync("fetch", { method: "GET", url });
     const metaMatch = data.match(
       /https?:\/\/suyong\.so\/index\.php\?mid=sticker&amp;sticker_srl=\d*">(?<title>.*?)<.*?<div class="btm_area clear">.*?\/>(?<author>.*?)</s
     );
@@ -22,7 +22,7 @@ export default {
       title: metaMatch.groups.title,
       author: metaMatch.groups.author,
       tags: metaMatch.groups.title.split(/[\s.,]+/i),
-      source: link,
+      source: url,
     };
   },
 } as Provider;

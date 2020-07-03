@@ -1,12 +1,13 @@
 import SuyongsoProvider from "./SuyongsoProvider";
 import IlbeProvider from "./IlbeProvider";
+import DCProvider from "./DCProvider";
 
-const providers = [IlbeProvider, SuyongsoProvider];
+const providers = [IlbeProvider, SuyongsoProvider, DCProvider];
 
 export default interface Provider {
   readonly re: RegExp;
   readonly name: string;
-  getData(link: string): Promise<ProviderResult>;
+  getData(url: string): Promise<ProviderResult>;
 }
 
 export interface ProviderResult {
@@ -20,6 +21,7 @@ export interface ProviderResult {
 export interface ImgData {
   url: string;
   filename: string;
+  referer?: string;
 }
 
 export function getProvider(link: string): Provider {

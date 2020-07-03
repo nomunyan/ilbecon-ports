@@ -4,8 +4,8 @@ import { ipcRenderer } from "electron";
 export default {
   re: /^https?:\/\/www\.ilbe\.com\/view\/(\d*)/i,
   name: "일베글",
-  async getData(link: string): Promise<ProviderResult> {
-    const data = ipcRenderer.sendSync("fetch", link);
+  async getData(url: string): Promise<ProviderResult> {
+    const data = ipcRenderer.sendSync("fetch", { method: "GET", url });
     const metaMatch = data.match(
       /<div class="post-wrap">.*?<h3><a href="javascript:;" onclick="location\.reload\(\);" {2}>(?<title>.*?)<\/a>.*?<span class="global-nick nick">.*?">(?<author>.*?)</s
     );
@@ -22,7 +22,7 @@ export default {
       title: metaMatch.groups.title,
       author: metaMatch.groups.author,
       tags: metaMatch.groups.title.split(/[\s.,]+/i),
-      source: link,
+      source: url,
     };
   },
 } as Provider;

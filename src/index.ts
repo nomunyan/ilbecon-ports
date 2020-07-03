@@ -1,5 +1,5 @@
 import { app, BrowserWindow, Menu, ipcMain } from "electron";
-import axios from "axios";
+import axios, { AxiosRequestConfig } from "axios";
 import FormData from "form-data";
 import { ImgData } from "./Provider";
 import fs from "fs";
@@ -154,8 +154,8 @@ app.on("activate", () => {
   }
 });
 
-ipcMain.on("fetch", async (event, url: string) => {
-  const { data } = await axios.get(url);
+ipcMain.on("fetch", async (event, config: AxiosRequestConfig) => {
+  const { data } = await axios(config);
   event.returnValue = data;
 });
 
@@ -175,10 +175,11 @@ ipcMain.on("upload", async (event, imgData: ImgData) => {
         NodeJS.ReadableStream
       >(imgData.url, {
         responseType: "stream",
+        headers: { referer: imgData.referer },
       });
       const content: string | undefined = headers["content-disposition"];
       formData.append("upload", imgStream, {
-        filename: content?.match(/filename="(.*)"/i)[1] || imgData.filename,
+        filename: content?.match(/filename="?(.*)"?/i)[1] || imgData.filename,
       });
     } else {
       formData.append("upload", fs.createReadStream(imgData.url));

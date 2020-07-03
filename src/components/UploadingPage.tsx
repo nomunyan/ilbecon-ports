@@ -45,6 +45,7 @@ export default function UploadingPage(props: UploadingPageProps): JSX.Element {
         }
         if (++position < uploadData.images.length) setPos(position);
         else {
+          ipcRenderer.removeAllListeners("upload-reply");
           position = 0;
           props.onSuccess({ ...uploadData, images: imgList }, errors);
           return;
@@ -67,9 +68,10 @@ export default function UploadingPage(props: UploadingPageProps): JSX.Element {
   return (
     <Stack {...columnProps}>
       <ProgressIndicator
-        label={`진행도 ${
-          data && pos !== -1 ? ((pos + 1) / data.images.length) * 100 : 0
-        }%`}
+        label={`진행도 ${(data && pos !== -1
+          ? ((pos + 1) / data.images.length) * 100
+          : 0
+        ).toFixed(0)}%`}
         percentComplete={
           data && pos !== -1 ? (pos + 1) / data.images.length : 0
         }
@@ -80,7 +82,7 @@ export default function UploadingPage(props: UploadingPageProps): JSX.Element {
       <PrimaryButton
         text="중지"
         onClick={(): void => {
-          ipcRenderer.removeAllListeners("upload-from-url-reply");
+          ipcRenderer.removeAllListeners("upload-reply");
           props.onCancel();
         }}
       />
