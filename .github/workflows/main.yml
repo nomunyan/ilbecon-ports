@@ -23,6 +23,7 @@ jobs:
       - run: yarn
 
       - name: Build All Platforms
+        id: build_all_platforms
         run: yarn make
 
       - name: Create Release
@@ -34,7 +35,7 @@ jobs:
           release_name: ilbe-ports ${{ github.ref }}
           tag_name: ${{ github.ref }}
           draft: false
-          prerelease: true
+          prerelease: false
 
       - name: Upload Ubuntu Release
         uses: actions/upload-release-asset@v1
@@ -42,8 +43,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./out/ubuntu.deb
-          asset_name: ilbecon-ports_${{ github.ref }}_amd64.deb
+          asset_path: ./out/make/deb/x64/${{ steps.build_all_platforms.outputs.ubuntu }}
+          asset_name: ${{ steps.build_all_platforms.outputs.ubuntu }}
           asset_content_type: application/deb
 
       - name: Upload Fedora Release
@@ -52,8 +53,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./out/fedora.rpm
-          asset_name: ilbecon-ports-${{ github.ref }}-1.x86_64.rpm
+          asset_path: ./out/make/rpm/x64/${{ steps.build_all_platforms.outputs.fedora }}
+          asset_name: ${{ steps.build_all_platforms.outputs.fedora }}
           asset_content_type: application/rpm
 
       - name: Upload Windows Release
@@ -62,8 +63,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./out/windows.zip
-          asset_name: ilbecon-ports-win32-x64-${{ github.ref }}.zip
+          asset_path: ./out/make/zip/win32/x64/${{ steps.build_all_platforms.outputs.win32 }}
+          asset_name: ${{ steps.build_all_platforms.outputs.win32 }}
           asset_content_type: application/zip
 
       - name: Upload MacOS Release
@@ -72,6 +73,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./out/macos.zip
-          asset_name: ilbecon-ports-darwin-x64-${{ github.ref }}.zip
+          asset_path: ./out/make/zip/darwin/x64/${{ steps.build_all_platforms.outputs.macos }}
+          asset_name: ${{ steps.build_all_platforms.outputs.macos }}
           asset_content_type: application/zip
