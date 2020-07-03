@@ -2,7 +2,7 @@ import Provider, { ProviderResult } from "./index";
 import { ipcRenderer } from "electron";
 
 const DCProvider: Provider = {
-  re: /^https?:\/\/dccon.dcinside.com\/.*?#(\d*)/i,
+  re: /^https?:\/\/dccon\.dcinside\.com\/.*?#(\d*)/i,
   name: "디시콘",
   async getData(link: string): Promise<ProviderResult> {
     const data = `package_idx=${link.match(DCProvider.re)[1]}`;

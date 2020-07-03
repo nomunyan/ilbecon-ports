@@ -1,8 +1,14 @@
 import SuyongsoProvider from "./SuyongsoProvider";
 import IlbeProvider from "./IlbeProvider";
 import DCProvider from "./DCProvider";
+import TelegramProvider from "./TelegramProvider";
 
-const providers = [IlbeProvider, SuyongsoProvider, DCProvider];
+const providers = [
+  IlbeProvider,
+  SuyongsoProvider,
+  DCProvider,
+  TelegramProvider,
+];
 
 export default interface Provider {
   readonly re: RegExp;

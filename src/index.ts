@@ -175,7 +175,7 @@ ipcMain.on("upload", async (event, imgData: ImgData) => {
         NodeJS.ReadableStream
       >(imgData.url, {
         responseType: "stream",
-        headers: { referer: imgData.referer },
+        headers: { referer: imgData.referer || "" },
       });
       const content: string | undefined = headers["content-disposition"];
       formData.append("upload", imgStream, {
