@@ -1,0 +1,86 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Dependency
+        run: sudo apt install wine64
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Use Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: "14.x"
+      - run: yarn
+
+      - name: Build Ubuntu
+        run: yarn run publish --platform=linux --targets=@electron-forge/maker-deb
+
+      - name: Build Fedora
+        run: yarn run publish --platform=linux --targets=@electron-forge/maker-rpm
+
+      - name: Build Windows
+        run: yarn run publish --platform=win32 --targets=@electron-forge/maker-zip
+
+      - name: Build MacOS
+        run: yarn run publish --platform=darwin --targets=@electron-forge/maker-zip
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_name: ilbe-ports v${GITHUB_SHA:7}
+          tag_name: ${GITHUB_SHA:7}
+          draft: false
+          prerelease: true
+
+      - name: Upload Ubuntu Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./out/make/deb/x64/ilbecon-ports_1.0.0_amd64.deb
+          asset_name: ilbecon-ports_${GITHUB_SHA:7}_amd64.deb
+          asset_content_type: application/deb
+
+      - name: Upload Fedora Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./out/make/rpm/x64/ilbecon-ports-1.0.0-1.x86_64.rpm
+          asset_name: ilbecon-ports-${GITHUB_SHA:7}-1.x86_64.rpm
+          asset_content_type: application/rpm
+
+      - name: Upload Windows Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./out/make/zip/win32/x64/ilbecon-ports-win32-x64-1.0.0.zip
+          asset_name: ilbecon-ports-win32-x64-${GITHUB_SHA:7}.zip
+          asset_content_type: application/zip
+
+      - name: Upload MacOS Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./out/make/zip/darwin/x64/ilbecon-ports-darwin-x64-1.0.0.zip
+          asset_name: ilbecon-ports-darwin-x64-${GITHUB_SHA:7}.zip
+          asset_content_type: application/zip
